@@ -27,7 +27,7 @@
 		</form>
 
 		<script type="text/javascript">
-			// Client ID and API key from the Developer Console
+			// Google client ID and other auth related vars
 			var CLIENT_ID = '596844367310-fknbkeq7k1o8asc59oolf0fe37abd3rs.apps.googleusercontent.com';
 			var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"];
 			var SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
@@ -93,8 +93,8 @@
 			}
 
 			function appendChat(message) {
-				var pre = document.getElementById('chat');
-				var textContent = document.createTextNode(message + '\n');
+				let pre = document.getElementById('chat');
+				let textContent = document.createTextNode(message + '\n');
 				pre.appendChild(textContent);
 			}
 
