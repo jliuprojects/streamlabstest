@@ -1,2 +1,2 @@
-web: npm app.js
-worker: env WORKER=true npm app.js
+web: node app.js
+worker: env WORKER=true node app.js
