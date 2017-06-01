@@ -112,7 +112,7 @@
 
 			function getLiveBroadCastMessages() { 
 				let url = urlInput.value; // should check for bad input here 
-				let urlKey = 'watch?v=';
+				let urlKey = 'watch?v='; // assume even minified youtube links have this key
 				let videoIdIndex = url.indexOf(urlKey) + urlKey.length;
 				let videoId = url.substr(videoIdIndex);
 
@@ -148,7 +148,7 @@
 						}
 					}
 
-					window.scrollTo(0,document.body.scrollHeight);
+					window.scrollTo(0, document.body.scrollHeight);
 				});
 			}
 
@@ -168,7 +168,7 @@
 			    	'part': 'snippet',
 			    	'snippet': snippet,
 			    }).then(function(response) {
-			    	updateChat()
+			    	updateChat();
 			    });
 			}
 		</script>
