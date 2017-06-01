@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>YouTube Data API Quickstart</title>
+		<title>Streamlabs</title>
 		<meta charset='utf-8' />
 		<style>
 
 		</style>
 	</head>
 	<body>
-		<p>YouTube Data API Quickstart</p>
+		<p>Streamlabs programming challenge</p>
 
 		<!--Add buttons to initiate auth sequence and sign out-->
 		<button id="authorize-button" style="display: none;">Authorize</button>
 		<button id="signout-button" style="display: none;">Sign Out</button>
 
-		<pre id="content"></pre>
+		<pre id="user-info"></pre>
 
 		<form id="url-form" action="javascript:getLiveBroadCastMessages()" style="display: none;">
 			Live Video: <input type="text" id="video-url-input"> <input type="submit" value="Submit">
@@ -29,12 +29,7 @@
 		<script type="text/javascript">
 			// Client ID and API key from the Developer Console
 			var CLIENT_ID = '596844367310-fknbkeq7k1o8asc59oolf0fe37abd3rs.apps.googleusercontent.com';
-
-			// Array of API discovery doc URLs for APIs used by the quickstart
 			var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"];
-
-			// Authorization scopes required by the API. If using multiple scopes,
-			// separated them with spaces.
 			var SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
 
 			var authorizeButton = document.getElementById('authorize-button');
@@ -44,6 +39,9 @@
 
 			var chatForm = document.getElementById('chat-form');
 			var chatInput = document.getElementById('video-chat-input');
+
+			var newestMessage = new Date(-8640000000000000); // used so that old messages will not be shown
+			var chatId = -1; // used to store chatid for polling chat messages
 
 			/**
 			 *  On load, called to load the auth2 library and API client library.
@@ -62,11 +60,8 @@
 					clientId: CLIENT_ID,
 					scope: SCOPES
 				}).then(function () {
-					// Listen for sign-in state changes.
-					gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-
-					// Handle the initial sign-in state.
-					updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+					gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus); // Listen for sign-in state changes.
+					updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get()); // Handle the initial sign-in state.
 					authorizeButton.onclick = handleAuthClick;
 					signoutButton.onclick = handleSignoutClick;
 				});
@@ -81,9 +76,7 @@
 					authorizeButton.style.display = 'none';
 					signoutButton.style.display = 'block';
 					urlForm.style.display = 'block';
-					
 					getChannel();
-
 				} else {
 					authorizeButton.style.display = 'block';
 					signoutButton.style.display = 'none';
@@ -91,30 +84,12 @@
 				}
 			}
 
-			/**
-			 *  Sign in the user upon button click.
-			 */
 			function handleAuthClick(event) {
 				gapi.auth2.getAuthInstance().signIn();
 			}
 
-			/**
-			 *  Sign out the user upon button click.
-			 */
 			function handleSignoutClick(event) {
 				gapi.auth2.getAuthInstance().signOut();
-			}
-
-			/**
-			 * Append text to a pre element in the body, adding the given message
-			 * to a text node in that element. Used to display info from API response.
-			 *
-			 * @param {string} message Text to be placed in pre element.
-			 */
-			function appendPre(message) {
-				var pre = document.getElementById('content');
-				var textContent = document.createTextNode(message + '\n');
-				pre.appendChild(textContent);
 			}
 
 			function appendChat(message) {
@@ -123,26 +98,20 @@
 				pre.appendChild(textContent);
 			}
 
-			/**
-			 * Print files.
-			 */
 			function getChannel() {
 				gapi.client.youtube.channels.list({
 					'part': 'snippet,contentDetails,statistics',
 					'mine': 'true'
 				}).then(function(response) {
-					console.log("logged in user is: ");
-					console.log(response);
-					var channel = response.result.items[0];
-					appendPre('Logged in channel\'s ID is ' + channel.id + '. ' +
-										'Its title is ' + channel.snippet.title + ', ' +
-										'and it has ' + channel.statistics.viewCount + ' views.');
+					let channel = response.result.items[0];
+					let userInfoMsg = 'Welcom ' + channel.snippet.title + ', your channel has ' + channel.statistics.viewCount + ' views.\n';
+					let userInfoHtml = document.createTextNode(userInfoMsg);
+					document.getElementById('user-info').appendChild(userInfoHtml);
 				});
 			}
 
-			var newestMessage = new Date(-8640000000000000);
-			function getLiveBroadCastMessages() {
-				let url = urlInput.value;
+			function getLiveBroadCastMessages() { 
+				let url = urlInput.value; // should check for bad input here 
 				let urlKey = 'watch?v=';
 				let videoIdIndex = url.indexOf(urlKey) + urlKey.length;
 				let videoId = url.substr(videoIdIndex);
@@ -150,39 +119,57 @@
 				urlInput.value = '';
 				urlForm.style.display = 'none';
 				chatForm.style.display = 'block';
-				console.log('videoid: ' + videoId);
 
-				setInterval(function() {
-					gapi.client.youtube.videos.list({
-						'part': 'liveStreamingDetails',
-						'id': videoId,
-					}).then(function(response) {
-						let chatId = response.result.items[0].liveStreamingDetails.activeLiveChatId;
-						gapi.client.youtube.liveChatMessages.list({
-							'part': 'snippet, authorDetails',
-							'liveChatId': chatId,
-							'maxResults': 200,
-						}).then(function(response) {
-							let msgs = response.result.items;
+				gapi.client.youtube.videos.list({
+					'part': 'liveStreamingDetails',
+					'id': videoId,
+				}).then(function(response) {
+					chatId = response.result.items[0].liveStreamingDetails.activeLiveChatId;
+					updateChat();
+					setInterval(updateChat, 3000);
+				});
+			}
 
-							for (let i = 0; i < msgs.length; i++) {
-								let sender = msgs[i].authorDetails.displayName;
-								let msg = msgs[i].snippet.displayMessage;
-								let timestamp = new Date(msgs[i].snippet.publishedAt);
-								if (timestamp > newestMessage) {
-									appendChat(sender + " : " + msg);
-									newestMessage = timestamp;
-								}
-							}
-						});
-					});
-				}, 3000);
+			function updateChat() {
+				gapi.client.youtube.liveChatMessages.list({
+					'part': 'snippet, authorDetails',
+					'liveChatId': chatId,
+					'maxResults': 200,
+				}).then(function(response) {
+					let msgs = response.result.items;
+
+					for (let i = 0; i < msgs.length; i++) {
+						let sender = msgs[i].authorDetails.displayName;
+						let msg = msgs[i].snippet.displayMessage;
+						let timestamp = new Date(msgs[i].snippet.publishedAt);
+						if (timestamp > newestMessage) {
+							appendChat(sender + " : " + msg);
+							newestMessage = timestamp;
+						}
+					}
+
+					window.scrollTo(0,document.body.scrollHeight);
+				});
 			}
 
 			function sendMessage() {
 				let msg = chatInput.value;
 				chatInput.value = '';
-				
+
+				let snippet = {
+				    "liveChatId": chatId,
+				    "type": "textMessageEvent",
+				    "textMessageDetails": {
+			      		"messageText": msg
+			    	}
+			    }
+
+			    gapi.client.youtube.liveChatMessages.insert({
+			    	'part': 'snippet',
+			    	'snippet': snippet,
+			    }).then(function(response) {
+			    	updateChat()
+			    });
 			}
 		</script>
 
