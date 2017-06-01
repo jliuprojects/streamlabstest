@@ -132,6 +132,7 @@
 				});
 			}
 
+			let newestMessage = new Date(-8640000000000000);
 			function getLiveBroadCastMessages() {
 				let url = input.value;
 				let urlKey = 'watch?v=';
@@ -139,30 +140,35 @@
 				let videoId = url.substr(videoIdIndex);
 
 				input.value = '';
+				form.style.display = 'none';
 				console.log('videoid: ' + videoId);
 
-				gapi.client.youtube.videos.list({
-					'part': 'liveStreamingDetails',
-					'id': videoId,
-				}).then(function(response) {
-					let chatId = response.result.items[0].liveStreamingDetails.activeLiveChatId;
-					gapi.client.youtube.liveChatMessages.list({
-						'part': 'snippet, authorDetails',
-						'liveChatId': chatId,
-						'maxResults': 200,
+				setInterval(function() {
+					gapi.client.youtube.videos.list({
+						'part': 'liveStreamingDetails',
+						'id': videoId,
 					}).then(function(response) {
-						console.log(response);
-						let msgs = response.result.items;
+						let chatId = response.result.items[0].liveStreamingDetails.activeLiveChatId;
+						gapi.client.youtube.liveChatMessages.list({
+							'part': 'snippet, authorDetails',
+							'liveChatId': chatId,
+							'maxResults': 200,
+						}).then(function(response) {
+							let msgs = response.result.items;
 
-						for (let i = 0; i < msgs.length; i++) {
-							let sender = msgs[i].authorDetails.displayName;
-							let msg = msgs[i].snippet.displayMessage;
-							appendChat("<strong>" + sender + "<strong> : " + msg);
-						}
+							for (let i = 0; i < msgs.length; i++) {
+								let sender = msgs[i].authorDetails.displayName;
+								let msg = msgs[i].snippet.displayMessage;
+								let timestamp = new Date(msgs[i].snippet.publishedAt);
+								if (timestamp > newestMessage) {
+									appendChat(sender + " : " + msg);
+									newestMessage = timestamp;
+								}
+							}
+						});
 					});
-				});
+				}, 3000);
 			}
-
 		</script>
 
 		<script async defer src="https://apis.google.com/js/api.js"
