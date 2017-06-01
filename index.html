@@ -22,6 +22,10 @@
 
 		<pre id="chat"></pre>
 
+		<form id="chat-form" action="javascript:sendMessage()" style="display: none;">
+			Enter a message: <input type="text" id="video-chat-input"> <input type="submit" value="Submit">
+		</form>
+
 		<script type="text/javascript">
 			// Client ID and API key from the Developer Console
 			var CLIENT_ID = '596844367310-fknbkeq7k1o8asc59oolf0fe37abd3rs.apps.googleusercontent.com';
@@ -35,8 +39,11 @@
 
 			var authorizeButton = document.getElementById('authorize-button');
 			var signoutButton = document.getElementById('signout-button');
-			var form = document.getElementById('url-form');
-			var input = document.getElementById('video-url-input');
+			var urlForm = document.getElementById('url-form');
+			var urlInput = document.getElementById('video-url-input');
+
+			var chatForm = document.getElementById('chat-form');
+			var chatInput = document.getElementById('video-chat-input');
 
 			/**
 			 *  On load, called to load the auth2 library and API client library.
@@ -73,13 +80,14 @@
 				if (isSignedIn) {
 					authorizeButton.style.display = 'none';
 					signoutButton.style.display = 'block';
-					form.style.display = 'block';
+					urlForm.style.display = 'block';
+					
 					getChannel();
 
 				} else {
 					authorizeButton.style.display = 'block';
 					signoutButton.style.display = 'none';
-					form.style.display = 'none';
+					urlForm.style.display = 'none';
 				}
 			}
 
@@ -132,15 +140,16 @@
 				});
 			}
 
-			let newestMessage = new Date(-8640000000000000);
+			var newestMessage = new Date(-8640000000000000);
 			function getLiveBroadCastMessages() {
-				let url = input.value;
+				let url = urlInput.value;
 				let urlKey = 'watch?v=';
 				let videoIdIndex = url.indexOf(urlKey) + urlKey.length;
 				let videoId = url.substr(videoIdIndex);
 
-				input.value = '';
-				form.style.display = 'none';
+				urlInput.value = '';
+				urlForm.style.display = 'none';
+				chatForm.style.display = 'block';
 				console.log('videoid: ' + videoId);
 
 				setInterval(function() {
@@ -168,6 +177,12 @@
 						});
 					});
 				}, 3000);
+			}
+
+			function sendMessage() {
+				let msg = chatInput.value;
+				chatInput.value = '';
+				
 			}
 		</script>
 
