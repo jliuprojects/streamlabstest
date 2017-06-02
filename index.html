@@ -28,7 +28,7 @@
 
 		<script type="text/javascript">
 			// Google client ID and other auth related vars
-			var CLIENT_ID = '596844367310-fknbkeq7k1o8asc59oolf0fe37abd3rs.apps.googleusercontent.com';
+			var CLIENT_ID = '596844367310-fknbkeq7k1o8asc59oolf0fe37abd3rs.apps.googleusercontent.com'; // TODO: should turn into env variable
 			var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"];
 			var SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
 
@@ -71,7 +71,7 @@
 			 *  Called when the signed in status changes, to update the UI
 			 *  appropriately. After a sign-in, the API is called.
 			 */
-			function updateSigninStatus(isSignedIn) {
+			function updateSigninStatus(isSignedIn) { // TODO: handle google only accounts (return errors)
 				if (isSignedIn) {
 					authorizeButton.style.display = 'none';
 					signoutButton.style.display = 'block';
@@ -110,8 +110,8 @@
 				});
 			}
 
-			function getLiveBroadCastMessages() { 
-				let url = urlInput.value; // should check for bad input here 
+			function getLiveBroadCastMessages() { // TODO: account for other forms of youtube urls
+				let url = urlInput.value; // TODO: should check for bad input here 
 				let urlKey = 'watch?v='; // assume even minified youtube links have this key
 				let videoIdIndex = url.indexOf(urlKey) + urlKey.length;
 				let videoId = url.substr(videoIdIndex);
@@ -120,7 +120,7 @@
 				urlForm.style.display = 'none';
 				chatForm.style.display = 'block';
 
-				gapi.client.youtube.videos.list({
+				gapi.client.youtube.videos.list({ // TODO: error check in case video is not a live video
 					'part': 'liveStreamingDetails',
 					'id': videoId,
 				}).then(function(response) {
@@ -130,7 +130,7 @@
 				});
 			}
 
-			function updateChat() {
+			function updateChat() { 
 				gapi.client.youtube.liveChatMessages.list({
 					'part': 'snippet, authorDetails',
 					'liveChatId': chatId,
